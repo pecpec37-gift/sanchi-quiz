@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>日本の産地あて 早押しクイズ道場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#0e1330; --bg1:#161d45; --surface:#1c2450; --surface2:#243066;
+    --line:#37407e; --gold:#e8b44f; --gold-soft:#f2cd82;
+    --ink:#eef2fb; --muted:#9aa6c8; --muted2:#727fa0;
+    --ok:#28c08c; --ok-deep:#0f8f66;
+    --ng:#e5484d;
+    --accent:#5b8dff;
+    --radius:18px;
+    --shadow:0 18px 44px rgba(0,0,0,.42);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Zen Kaku Gothic New",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 600px at 12% -10%, #1d2a60 0%, transparent 60%),
+      radial-gradient(900px 520px at 100% 0%, #182154 0%, transparent 55%),
+      linear-gradient(160deg,var(--bg0),var(--bg1));
+    min-height:100dvh;letter-spacing:.01em;-webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05;
+    background-image:
+      repeating-linear-gradient(0deg,transparent 0 46px,#cdd4ff 46px 47px),
+      repeating-linear-gradient(90deg,transparent 0 46px,#cdd4ff 46px 47px);
+    mask:radial-gradient(120% 90% at 50% 18%,#000 40%,transparent 78%);
+  }
+  .wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:18px 16px 40px;min-height:100dvh;display:flex;flex-direction:column}
+  .num{font-variant-numeric:tabular-nums}
+
+  button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;padding:15px 22px;border-radius:14px;font-weight:900;font-size:1.02rem;
+    background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#3a2a06;box-shadow:0 10px 22px rgba(232,180,79,.28);transition:transform .12s ease,filter .12s ease}
+  .btn:active{transform:translateY(1px) scale(.99)}
+  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;border:1.5px solid var(--line);font-weight:700}
+  .btn.ghost:hover{color:var(--ink)}
+  .btn.block{width:100%}
+  @media (hover:hover) and (pointer:fine){ .btn:hover{filter:brightness(1.05)} }
+
+  .screen{display:none;animation:fade .34s ease}
+  .screen.active{display:flex;flex-direction:column;flex:1}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .portal-back{position:sticky;top:0;z-index:5;margin:-2px 0 10px}
+  .portal-back a{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.82rem;font-weight:700;text-decoration:none;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(14,19,48,.7);backdrop-filter:blur(6px)}
+  @media (hover:hover) and (pointer:fine){ .portal-back a:hover{color:var(--ink);border-color:var(--gold)} }
+
+  /* TOP */
+  .eyebrow{color:var(--gold);font-weight:700;letter-spacing:.22em;font-size:.72rem;text-transform:uppercase;margin:6px 0 2px}
+  .title{font-weight:900;font-size:1.95rem;line-height:1.16;margin:0 0 8px}
+  .lede{color:var(--muted);font-size:.95rem;line-height:1.7;margin:0 0 14px}
+  .lede b{color:var(--gold-soft)}
+  .example{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 16px;font-size:.86rem;color:var(--muted);line-height:1.7}
+  .example .ex-p{color:var(--ink);font-weight:900}
+  .example .ex-a{color:var(--gold-soft);font-weight:900}
+  .hintline{display:flex;align-items:center;gap:8px;color:var(--muted2);font-size:.8rem;margin-bottom:14px}
+  .hintline .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+
+  .genre-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .gcard{position:relative;text-align:left;padding:18px 16px;border-radius:var(--radius);background:linear-gradient(180deg,var(--surface2),var(--surface));border:1.5px solid var(--line);box-shadow:var(--shadow);transition:transform .14s ease,border-color .14s ease;overflow:hidden}
+  .gcard .emo{font-size:1.7rem;line-height:1}
+  .gcard .gname{font-weight:900;font-size:1.12rem;margin:8px 0 2px}
+  .gcard .gsub{color:var(--muted);font-size:.76rem}
+  .gcard .go{position:absolute;right:14px;bottom:14px;color:var(--gold);font-weight:900;font-size:.78rem;opacity:.9}
+  .gcard:active{transform:scale(.985)}
+  .gcard.random{grid-column:1 / -1;background:linear-gradient(120deg,#2b3068,#20265a)}
+  @media (hover:hover) and (pointer:fine){ .gcard:hover{transform:translateY(-3px);border-color:var(--gold)} }
+  .toplinks{display:flex;gap:10px;margin-top:16px}
+  .toplinks .btn{flex:1}
+
+  /* READY */
+  .ready-card{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1.5px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 20px;text-align:center;margin:auto 0}
+  .ready-emo{font-size:3rem;margin-bottom:6px}
+  .ready-genre{font-size:1.55rem;font-weight:900;margin:2px 0 4px}
+  .ready-note{color:var(--muted);font-size:.85rem;margin-bottom:18px}
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 20px;text-align:left}
+  .rule{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:.82rem;color:var(--muted)}
+  .rule b{display:block;color:var(--ink);font-weight:900;font-size:.92rem;margin-bottom:1px}
+
+  /* GAME */
+  .hud{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .hud .chip{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:8px 12px;text-align:center;min-width:64px}
+  .hud .chip .k{font-size:.62rem;color:var(--muted2);letter-spacing:.12em}
+  .hud .chip .v{font-weight:900;font-size:1.12rem}
+  .hud .chip.score .v{color:var(--gold-soft)}
+  .hud .qcount{margin-left:auto;color:var(--muted);font-weight:700;font-size:.85rem}
+  .hud .qcount b{color:var(--ink);font-size:1.05rem}
+  .timerbar{height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:18px}
+  .timerbar > i{display:block;height:100%;width:100%;border-radius:6px;background:linear-gradient(90deg,var(--ok),var(--gold));transition:width .12s linear}
+  .timerbar.low > i{background:linear-gradient(90deg,var(--ng),#ff7a55)}
+
+  .q-eyebrow{color:var(--gold);font-weight:700;font-size:.74rem;letter-spacing:.14em;text-align:center;margin-bottom:12px}
+  .podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+  .pcard{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1.5px solid var(--line);border-radius:14px;padding:14px 8px 12px;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.3);opacity:0;transform:translateY(10px);animation:rise .4s ease forwards}
+  .pcard:nth-child(1){animation-delay:.05s}
+  .pcard:nth-child(2){animation-delay:.20s}
+  .pcard:nth-child(3){animation-delay:.35s}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .pcard .medal{font-size:1.6rem;line-height:1}
+  .pcard .rk{font-size:.66rem;color:var(--muted2);letter-spacing:.1em;margin:3px 0 5px}
+  .pcard .pref{font-weight:900;font-size:1.18rem}
+  .pcard.gold{border-color:rgba(232,180,79,.55);background:linear-gradient(180deg,#2c3164,#232a58);padding-top:20px}
+  @media (prefers-reduced-motion:reduce){ .pcard{animation:none;opacity:1;transform:none} }
+
+  .qtext{min-height:2.6em;margin:18px 2px 4px;font-size:1.02rem;line-height:1.6;font-weight:700;text-align:center;transition:opacity .28s ease}
+  .qtext .cursor{display:inline-block;width:.08em;height:1.05em;background:var(--gold);margin-left:2px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .qtext.faded{opacity:0}
+
+  .buzzer-area{margin-top:10px}
+  .buzzer{width:100%;padding:18px;border-radius:16px;font-size:1.15rem;font-weight:900;color:#3a2a06;background:linear-gradient(180deg,var(--gold-soft),var(--gold));box-shadow:0 12px 26px rgba(232,180,79,.34);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 12px 26px rgba(232,180,79,.30)}50%{box-shadow:0 12px 34px rgba(232,180,79,.55)}}
+  @media (prefers-reduced-motion:reduce){ .buzzer{animation:none} .qtext .cursor{animation:none} }
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .choice{padding:16px 12px;border-radius:14px;font-size:1.0rem;font-weight:900;background:var(--surface2);border:1.5px solid var(--line);color:var(--ink);transition:transform .1s ease,background .15s ease,border-color .15s ease}
+  .choice:active{transform:scale(.98)}
+  @media (hover:hover) and (pointer:fine){ .choice:hover:not([disabled]){border-color:var(--gold);background:#28356e} }
+  .choice.correct{background:linear-gradient(180deg,#2fd39a,var(--ok-deep));border-color:transparent;color:#04241a}
+  .choice.wrong{background:linear-gradient(180deg,#f0666a,var(--ng));border-color:transparent;color:#fff}
+  .choice.dim{opacity:.42}
+  .choice[disabled]{cursor:default}
+
+  /* トースト */
+  .toast-scrim{position:fixed;inset:0;z-index:40;display:none;align-items:flex-end;justify-content:center;background:rgba(6,10,26,.5);backdrop-filter:blur(2px);padding:0 16px 26px}
+  .toast-scrim.show{display:flex;animation:fade .2s ease}
+  .toast{width:100%;max-width:520px;border-radius:18px;padding:18px 18px 16px;background:linear-gradient(180deg,var(--surface2),var(--surface));border:1.5px solid var(--line);box-shadow:0 -8px 40px rgba(0,0,0,.5);transform:translateY(8px);animation:pop .26s cubic-bezier(.2,.9,.3,1.2) forwards}
+  @keyframes pop{to{transform:none}}
+  .toast .badge{font-size:1.28rem;font-weight:900;display:flex;align-items:center;gap:8px}
+  .toast.ok .badge{color:var(--ok)}
+  .toast.ng .badge{color:var(--ng)}
+  .toast .detail{color:var(--muted);font-size:.9rem;margin:6px 0 4px;line-height:1.6}
+  .toast .detail b{color:var(--gold-soft)}
+  .toast .ansname{color:var(--ink);font-weight:900}
+  .toast .trivia{color:var(--muted);font-size:.82rem;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:10px 0 14px;line-height:1.55}
+  .toast .trivia b{color:var(--gold-soft)}
+
+  /* RESULT */
+  .result-hero{text-align:center;padding:8px 0 2px}
+  .result-hero .rk{color:var(--muted);font-weight:700;letter-spacing:.18em;font-size:.74rem}
+  .bigscore{font-size:3.6rem;font-weight:900;line-height:1;margin:6px 0 2px;color:var(--gold-soft)}
+  .bigscore small{font-size:1rem;color:var(--muted);font-weight:700;margin-left:4px}
+  .score-break{display:flex;justify-content:center;gap:18px;color:var(--muted);font-size:.85rem;margin-top:6px}
+  .score-break b{color:var(--ink)}
+  .hanamaru{display:none;margin:16px auto 4px;text-align:center;animation:stampin .5s cubic-bezier(.2,.9,.3,1.3)}
+  .hanamaru.show{display:block}
+  @keyframes stampin{0%{transform:scale(2.4) rotate(-16deg);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+  .hanamaru svg{width:118px;height:118px;filter:drop-shadow(0 6px 14px rgba(229,72,77,.4))}
+  .hanamaru .cap{color:var(--ng);font-weight:900;margin-top:2px;letter-spacing:.1em}
+
+  .section-h{font-weight:900;font-size:1rem;margin:22px 2px 10px;display:flex;align-items:center;gap:8px}
+  .section-h .bar{width:4px;height:16px;border-radius:2px;background:var(--gold)}
+
+  .review{display:flex;flex-direction:column;gap:10px}
+  .rev-item{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .rev-item .rprefs{color:var(--muted);font-size:.82rem;margin-bottom:4px}
+  .rev-item .rprefs b{color:var(--gold-soft)}
+  .rev-item .rrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .rev-item .yourbad{color:var(--ng);font-size:.78rem;font-weight:700}
+  .rev-item .right{font-weight:900;font-size:1.05rem}
+  .rev-item .rnote{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:3px}
+  .allcorrect{background:rgba(40,192,140,.1);border:1px solid rgba(40,192,140,.4);border-radius:14px;padding:16px;text-align:center;color:var(--ok);font-weight:900}
+
+  table.rank{width:100%;border-collapse:collapse;font-size:.9rem}
+  table.rank th,table.rank td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--line)}
+  table.rank th{color:var(--muted2);font-size:.72rem;letter-spacing:.1em;font-weight:700}
+  table.rank td.num{text-align:right;font-weight:900}
+  table.rank tr.me td{color:var(--gold-soft)}
+  table.rank .medal{width:26px}
+  .rank-empty{color:var(--muted);font-size:.85rem;text-align:center;padding:14px}
+
+  .result-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+  .result-actions .btn{flex:1;min-width:150px}
+  .disclaimer{color:var(--muted2);font-size:.72rem;line-height:1.6;margin-top:18px;text-align:center}
+  .footer{margin-top:auto;padding-top:20px;color:var(--muted2);font-size:.72rem;text-align:center}
+  @media (max-width:380px){ .title{font-size:1.66rem} .rules{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- TOP -->
+  <section id="topScreen" class="screen active">
+    <div class="portal-back"><a href="https://pecpec37-gift.github.io/portal/">← ポータルサイトに戻る</a></div>
+    <p class="eyebrow">Japan Production Quiz</p>
+    <h1 class="title">🗾 日本の産地あて<br>早押しクイズ道場</h1>
+    <p class="lede">生産量<b>TOP3の都道府県</b>を見て、その産物を当てる早押しクイズ。<b>ジャンルをクリックすればすぐスタート</b>（次の画面のボタンは最後の確認だけ）。</p>
+    <div class="example">
+      <div>🥇和歌山　🥈愛媛　🥉静岡（生産量TOP3）の産物は？</div>
+      <div style="margin-top:6px">→ 答え：<span class="ex-a">みかん 🍊</span></div>
+    </div>
+    <div class="hintline"><span class="dot"></span>制限30秒・正解で+10点＆+5秒・100点以上で花丸🌸</div>
+
+    <div class="genre-grid" id="genreGrid"></div>
+    <div class="toplinks"><button class="btn ghost" id="topRankBtn">🏆 ランキングを見る</button></div>
+  </section>
+
+  <!-- READY -->
+  <section id="readyScreen" class="screen">
+    <div class="portal-back"><a href="https://pecpec37-gift.github.io/portal/">← ポータルサイトに戻る</a></div>
+    <div class="ready-card">
+      <div class="ready-emo" id="readyEmo">🍎</div>
+      <div class="ready-genre" id="readyGenre">くだもの</div>
+      <div class="ready-note" id="readyNote">この設定で10問に挑戦します</div>
+      <div class="rules">
+        <div class="rule"><b>10問</b>ランダム出題</div>
+        <div class="rule"><b>30秒</b>＋残り時間ボーナス</div>
+        <div class="rule"><b>+10点/+5秒</b>正解時</div>
+        <div class="rule"><b>−5秒</b>不正解（減点なし）</div>
+      </div>
+      <button class="btn block" id="startBtn" style="font-size:1.15rem;padding:18px">スタート！</button>
+      <button class="btn ghost block" id="readyBackBtn" style="margin-top:10px">ジャンルを選び直す</button>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="gameScreen" class="screen">
+    <div class="hud">
+      <div class="chip score"><div class="k">SCORE</div><div class="v num" id="hudScore">0</div></div>
+      <div class="chip"><div class="k">TIME</div><div class="v num" id="hudTime">30</div></div>
+      <div class="qcount"><b id="hudQ">1</b> / 10</div>
+    </div>
+    <div class="timerbar" id="timerBar"><i id="timerFill"></i></div>
+
+    <div class="q-eyebrow">この3県が生産量TOP3の産物は？</div>
+    <div class="podium" id="podium"></div>
+
+    <div class="qtext" id="qText"></div>
+
+    <div class="buzzer-area" id="buzzerArea">
+      <button class="buzzer" id="buzzerBtn">🔔 回答する！</button>
+    </div>
+    <div class="choices" id="choices" style="display:none"></div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="resultScreen" class="screen">
+    <div class="portal-back"><a href="https://pecpec37-gift.github.io/portal/">← ポータルサイトに戻る</a></div>
+    <div class="result-hero">
+      <div class="rk" id="resultGenreLabel">くだもの</div>
+      <div class="bigscore num"><span id="finalScore">0</span><small>点</small></div>
+      <div class="score-break">
+        <span>正解 <b class="num" id="finalCorrect">0</b>/10</span>
+        <span>時間ボーナス <b class="num" id="finalBonus">0</b></span>
+      </div>
+    </div>
+    <div class="hanamaru" id="hanamaru">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <g fill="none" stroke="#e5484d" stroke-width="5" stroke-linecap="round">
+          <circle cx="50" cy="50" r="30"/>
+          <path d="M50 20 C58 30 58 42 50 50 C42 58 42 70 50 80"/>
+          <path d="M30 40 C40 46 52 46 62 40"/>
+          <path d="M30 60 C40 54 52 54 62 60"/>
+        </g>
+      </svg>
+      <div class="cap">🌸 花丸 GET！ 🌸</div>
+    </div>
+
+    <div class="section-h"><span class="bar"></span>まちがえた問題</div>
+    <div class="review" id="reviewList"></div>
+
+    <div class="section-h"><span class="bar"></span>スコアランキング（このデバイス）</div>
+    <div id="rankWrap"></div>
+
+    <div class="result-actions">
+      <button class="btn" id="retryBtn">もう一度（同じジャンル）</button>
+      <button class="btn ghost" id="homeBtn">ジャンル選択へ</button>
+    </div>
+    <div class="disclaimer">※ 産地データは農林水産省「作物統計」等の近年の数値をもとにしています。年によって順位が入れ替わる品目もあります。</div>
+  </section>
+
+  <div class="footer">とみやんのゲームランド ／ Japan Production Quiz</div>
+</div>
+
+<!-- トースト -->
+<div class="toast-scrim" id="toastScrim">
+  <div class="toast" id="toast">
+    <div class="badge" id="toastBadge">✅ 正解！</div>
+    <div class="detail" id="toastDetail"></div>
+    <div class="trivia" id="toastTrivia"></div>
+    <button class="btn block" id="nextBtn">次の問題へ →</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   日本の産地あて 早押しクイズ道場
+   データ形式: [cat, [1位,2位,3位], 産物, ヒント, 雑学]
+   cat: 'F'果物 / 'V'野菜 / 'O'米・畜産・水産ほか
+   出典: 農林水産省「作物統計」等の近年データ（年により順位変動あり）
+   ========================================================= */
+const DATA = [
+  // ---- くだもの F (12) ----
+  ['F',['和歌山','愛媛','静岡'],'みかん','冬にこたつで食べる、皮を手でむく柑橘。','和歌山「有田みかん」が有名。上位3県で全国の約半分。'],
+  ['F',['青森','長野','岩手'],'りんご','青森が全国の約6割を占める果物。','「ふじ」「王林」など。津軽地方が主産地。'],
+  ['F',['山梨','長野','岡山'],'ぶどう','房で実り、干したりワインにもなる。','山梨は甲州ぶどうの本場。岡山はマスカット。'],
+  ['F',['山梨','福島','長野'],'もも','夏が旬。やわらかく甘い、産毛のある果物。','山梨と福島で全国の半分以上。'],
+  ['F',['山形','北海道','山梨'],'さくらんぼ','初夏に実る小さな赤い果実。','山形が全国の約7割。「佐藤錦」が代表。'],
+  ['F',['千葉','茨城','栃木'],'日本なし','「幸水」「豊水」などみずみずしい和のなし。','関東が主産地。'],
+  ['F',['和歌山','奈良','福岡'],'柿（かき）','秋の味覚。干し柿にもなる橙色の果実。','和歌山・奈良で全国の約半分。'],
+  ['F',['和歌山','群馬','三重'],'うめ（梅）','梅干しや梅酒に使う初夏の実。','和歌山「南高梅」が圧倒的シェア。'],
+  ['F',['長崎','千葉','鹿児島'],'びわ','初夏のオレンジ色の実。種が大きい。','長崎が全国トップ。'],
+  ['F',['愛媛','福岡','和歌山'],'キウイフルーツ','切ると種が放射状に並ぶ緑や黄の果実。','温暖な西日本が中心。'],
+  ['F',['山梨','長野','和歌山'],'すもも','プラムとも呼ばれる夏の果実。','山梨が全国トップ。'],
+  ['F',['沖縄','宮崎','鹿児島'],'マンゴー','南国の濃厚な甘さのトロピカルフルーツ。','宮崎「太陽のタマゴ」が有名。'],
+
+  // ---- やさい V (26) ----
+  ['V',['群馬','愛知','千葉'],'キャベツ','ロールキャベツや千切りでおなじみの葉物。','群馬・嬬恋高原の夏秋キャベツが有名。'],
+  ['V',['長野','茨城','群馬'],'レタス','サラダの定番、みずみずしい葉物。','長野・川上村の高原レタス。'],
+  ['V',['茨城','長野','群馬'],'はくさい','鍋物に欠かせない冬の葉物。','茨城・長野が主産地。'],
+  ['V',['千葉','北海道','青森'],'だいこん','おでんや大根おろしにする白い根菜。','千葉・三浦などが有名。'],
+  ['V',['北海道','千葉','徳島'],'にんじん','オレンジ色でカロテン豊富な根菜。','北海道が全国トップ。'],
+  ['V',['北海道','佐賀','兵庫'],'たまねぎ','炒めると甘くなる常備野菜の定番。','兵庫・淡路島産が有名。'],
+  ['V',['北海道','鹿児島','長崎'],'じゃがいも','カレーやポテトに。北海道が約8割。','男爵・メークインなど。'],
+  ['V',['熊本','北海道','愛知'],'トマト','赤くて丸い、生でも加熱でも使う果菜。','熊本が全国トップ。'],
+  ['V',['宮崎','群馬','埼玉'],'きゅうり','パリッとした緑の夏野菜。','宮崎の促成栽培が有名。'],
+  ['V',['高知','熊本','群馬'],'なす','紫色の実。焼きや煮浸しに。','高知が全国トップ。'],
+  ['V',['茨城','宮崎','高知'],'ピーマン','緑色でほろ苦い夏野菜。','茨城が全国トップ。'],
+  ['V',['千葉','埼玉','茨城'],'ねぎ','薬味や鍋に。白い部分と青い部分。','関東が主産地。'],
+  ['V',['埼玉','群馬','千葉'],'ほうれんそう','鉄分豊富な緑の葉物。おひたしに。','関東近郊で多い。'],
+  ['V',['北海道','埼玉','愛知'],'ブロッコリー','緑のつぼみを食べる栄養野菜。','2026年から国の「指定野菜」に。'],
+  ['V',['茨城','佐賀','徳島'],'れんこん','穴のあいたシャキシャキの地下茎。','茨城・霞ヶ浦周辺が有名。'],
+  ['V',['鹿児島','茨城','千葉'],'さつまいも','焼き芋や干し芋にする甘い芋。','鹿児島が全国トップ。'],
+  ['V',['埼玉','千葉','宮崎'],'さといも','煮物にする、ぬめりのある芋。','埼玉が全国トップ。'],
+  ['V',['青森','茨城','北海道'],'ごぼう','きんぴらや煮物にする細長い根菜。','青森が全国トップ。'],
+  ['V',['青森','香川','宮崎'],'にんにく','料理に香りを出す球根状の野菜。','青森・田子町が有名。全国の約7割。'],
+  ['V',['高知','熊本','宮崎'],'しょうが','薬味や飲み物に。ピリッと辛い根茎。','高知が全国トップ。'],
+  ['V',['沖縄','宮崎','鹿児島'],'ゴーヤ（にがうり）','ゴツゴツして苦い、沖縄料理の定番。','チャンプルーでおなじみ。'],
+  ['V',['北海道','鹿児島','長野'],'かぼちゃ','ホクホク甘い、緑の皮の果菜。','北海道が全国トップ。'],
+  ['V',['熊本','千葉','山形'],'すいか','夏の風物詩。赤い果肉と黒い種。','熊本が全国トップ。'],
+  ['V',['茨城','熊本','北海道'],'メロン','網目模様の高級感ある甘い果菜。','茨城が全国トップ。'],
+  ['V',['栃木','福岡','熊本'],'いちご','冬〜春の赤い果菜。ケーキにも。','栃木「とちおとめ」、福岡「あまおう」。'],
+  ['V',['北海道','佐賀','長野'],'アスパラガス','緑の穂先を食べる春の野菜。','北海道が全国トップ。'],
+
+  // ---- 米・畜産・水産ほか O (16) ----
+  ['O',['新潟','北海道','秋田'],'米（コメ）','日本の主食。コシヒカリなどの品種。','新潟コシヒカリが代表。'],
+  ['O',['北海道','福岡','佐賀'],'小麦','パンやうどんの原料になる穀物。','北海道が全国の約6割。'],
+  ['O',['北海道','宮城','秋田'],'大豆','豆腐・味噌・納豆の原料になるマメ。','北海道が全国トップ。'],
+  ['O',['北海道','長野','栃木'],'そば','麺にして食べる香り高い穀物。','北海道が全国トップ。'],
+  ['O',['静岡','鹿児島','三重'],'茶（お茶）','新芽を摘んで作る緑の飲み物の原料。','静岡と鹿児島で全国の大半。'],
+  ['O',['群馬','栃木','茨城'],'こんにゃくいも','食品「こんにゃく」の原料になる芋。','群馬が全国の9割以上。'],
+  ['O',['千葉','茨城','鹿児島'],'落花生（ピーナッツ）','殻付きで実り、炒って食べるマメ。','千葉が全国トップ。'],
+  ['O',['北海道','栃木','熊本'],'牛乳（生乳）','毎朝飲む白い飲み物のもと。','北海道が全国の半分以上。'],
+  ['O',['北海道','鹿児島','宮崎'],'牛肉（肉用牛）','ステーキやすき焼きに。飼養頭数の上位。','各地にブランド牛がある。'],
+  ['O',['鹿児島','宮崎','北海道'],'豚肉（豚）','とんかつや生姜焼きにする肉。','鹿児島「黒豚」が有名。'],
+  ['O',['鹿児島','宮崎','岩手'],'鶏肉（ブロイラー）','からあげや焼き鳥に。南九州が主産地。','宮崎・鹿児島が二大産地。'],
+  ['O',['茨城','鹿児島','千葉'],'鶏卵（たまご）','「物価の優等生」と呼ばれる食材。','茨城が全国トップ。'],
+  ['O',['佐賀','兵庫','福岡'],'のり（海苔）','おにぎりや巻き寿司を包む黒い海藻。','有明海が名産地。'],
+  ['O',['広島','宮城','岡山'],'牡蠣（かき）','「海のミルク」と呼ばれる貝。','広島が全国の約6割。'],
+  ['O',['鹿児島','愛知','宮崎'],'うなぎ（養殖）','蒲焼きで食べる細長い川魚。','鹿児島が全国トップ。'],
+  ['O',['愛媛','長崎','三重'],'真珠（養殖）','貝の中で育つ、宝飾品になる玉。','愛媛・宇和島が有名。'],
+];
+
+const GENRES = [
+  { id:'F', name:'くだもの', emo:'🍎', sub:'みかん・りんご ほか' },
+  { id:'V', name:'やさい',   emo:'🥬', sub:'キャベツ・トマト ほか' },
+  { id:'O', name:'米・畜産・水産ほか', emo:'🐄', sub:'米・牛乳・海苔 ほか' },
+  { id:'RD', name:'ランダム', emo:'🎲', sub:'全ジャンルからごちゃまぜ' },
+];
+
+const QUESTIONS_PER_GAME=10, START_TIME=30, TYPE_SPEED=120, HANAMARU_SCORE=100;
+const RANK_KEY='sanchi_quiz_ranking_v1';
+
+let state=null, typeTimer=null, typeGen=0, tickTimer=null, pendingGenre=null;
+
+function $(id){ return document.getElementById(id); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function toObj(r){ return { cat:r[0], prefs:r[1], answer:r[2], hint:r[3], note:r[4] }; }
+function poolForGenre(gid){ return gid==='RD'? DATA.slice() : DATA.filter(r=>r[0]===gid); }
+function escapeHtml(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
+
+/* TOP */
+function buildGenreCards(){
+  const grid=$('genreGrid'); grid.innerHTML='';
+  GENRES.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='gcard'+(g.id==='RD'?' random':'');
+    const count = poolForGenre(g.id).length;
+    b.innerHTML=`<div class="emo">${g.emo}</div><div class="gname">${g.name}</div><div class="gsub">${g.sub}</div><div class="go">${count}問から出題 →</div>`;
+    b.addEventListener('click',()=>gotoReady(g.id));
+    grid.appendChild(b);
+  });
+}
+function gotoReady(gid){
+  pendingGenre=gid;
+  const g=GENRES.find(x=>x.id===gid);
+  $('readyEmo').textContent=g.emo; $('readyGenre').textContent=g.name;
+  $('readyNote').textContent=`${poolForGenre(gid).length}問のプールから10問に挑戦します`;
+  showScreen('readyScreen');
+}
+
+/* ゲーム開始 */
+function startGame(){
+  const gid=pendingGenre;
+  const pool=poolForGenre(gid).map(toObj);
+  const picked=shuffle(pool).slice(0,QUESTIONS_PER_GAME);
+  const questions=picked.map(q=>{
+    let dp=DATA.map(toObj).filter(x=>x.answer!==q.answer);
+    const same=dp.filter(x=>x.cat===q.cat);
+    const base=(same.length>=3? same: dp);
+    const distractors=shuffle(base).slice(0,3);
+    const options=shuffle([q,...distractors]).map(o=>o.answer);
+    return { ...q, options };
+  });
+  state={ genre:gid, genreName:GENRES.find(x=>x.id===gid).name, questions, idx:0, score:0, correct:0, time:START_TIME, wrongs:[], phase:'idle' };
+  showScreen('gameScreen');
+  startTicker();
+  loadQuestion();
+}
+
+/* タイマー */
+function startTicker(){
+  stopTicker();
+  tickTimer=setInterval(()=>{
+    if(state.phase==='feedback'||state.phase==='ended') return;
+    state.time-=0.1;
+    if(state.time<=0){ state.time=0; renderTime(); endGame(true); return; }
+    renderTime();
+  },100);
+}
+function stopTicker(){ if(tickTimer){ clearInterval(tickTimer); tickTimer=null; } }
+function renderTime(){
+  const t=Math.max(0,state.time);
+  $('hudTime').textContent=Math.ceil(t);
+  $('timerFill').style.width=Math.max(0,Math.min(100,(t/START_TIME)*100))+'%';
+  $('timerBar').classList.toggle('low',t<=8);
+}
+
+/* 問題ロード */
+function loadQuestion(){
+  const q=state.questions[state.idx];
+  state.phase='reading';
+  $('hudScore').textContent=state.score;
+  $('hudQ').textContent=state.idx+1;
+  renderTime();
+
+  const qt=$('qText'); qt.classList.remove('faded'); qt.innerHTML='';
+  $('choices').style.display='none'; $('choices').innerHTML='';
+  $('buzzerArea').style.display='block'; $('buzzerBtn').disabled=false;
+
+  // ひな壇（TOP3都道府県）
+  const medals=['🥇','🥈','🥉'], rk=['1位','2位','3位'];
+  $('podium').innerHTML=q.prefs.map((p,i)=>
+    `<div class="pcard${i===0?' gold':''}"><div class="medal">${medals[i]}</div><div class="rk">${rk[i]}</div><div class="pref">${escapeHtml(p)}</div></div>`
+  ).join('');
+
+  startTypewriter('ヒント：'+q.hint);
+}
+
+/* タイプライター */
+function startTypewriter(text){
+  clearTimeout(typeTimer); typeGen++; const gen=typeGen; const qt=$('qText'); let i=0;
+  const step=()=>{
+    if(gen!==typeGen) return;
+    qt.innerHTML=escapeHtml(text.slice(0,i))+(i<text.length?'<span class="cursor"></span>':'');
+    if(i<text.length){ i++; typeTimer=setTimeout(step,TYPE_SPEED); }
+  };
+  step();
+}
+function stopTypewriter(){ typeGen++; clearTimeout(typeTimer); }
+
+/* バズー */
+$('buzzerBtn').addEventListener('click',()=>{
+  if(state.phase!=='reading') return;
+  state.phase='answering';
+  stopTypewriter();
+  $('buzzerBtn').disabled=true;
+  $('qText').classList.add('faded');
+  setTimeout(()=>{ $('buzzerArea').style.display='none'; showChoices(); },300);
+});
+function showChoices(){
+  const q=state.questions[state.idx];
+  const box=$('choices'); box.innerHTML='';
+  q.options.forEach(opt=>{
+    const b=document.createElement('button');
+    b.className='choice'; b.textContent=opt;
+    b.addEventListener('click',()=>selectAnswer(b,opt));
+    box.appendChild(b);
+  });
+  box.style.display='grid';
+}
+
+/* 回答 */
+function selectAnswer(btn,chosen){
+  if(state.phase!=='answering') return;
+  state.phase='feedback';
+  const q=state.questions[state.idx];
+  const correct=chosen===q.answer;
+  [...$('choices').children].forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===q.answer) b.classList.add('correct');
+    else if(b===btn) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  if(correct){ state.score+=10; state.correct++; state.time+=5; }
+  else{ state.time-=5; if(state.time<0)state.time=0; state.wrongs.push({prefs:q.prefs,answer:q.answer,note:q.note,chosen}); }
+  $('hudScore').textContent=state.score; renderTime();
+
+  const qt=$('qText'); qt.innerHTML='ヒント：'+escapeHtml(q.hint); qt.classList.remove('faded');
+  setTimeout(()=>showToast(correct,q),600);
+}
+
+/* トースト */
+function showToast(correct,q){
+  const toast=$('toast'), scrim=$('toastScrim');
+  toast.classList.toggle('ok',correct); toast.classList.toggle('ng',!correct);
+  if(correct){ $('toastBadge').textContent='✅ 正解！'; $('toastDetail').innerHTML=`<b>+10点</b> ／ 時間 <b>+5秒</b>`; }
+  else{ $('toastBadge').textContent='❌ 不正解'; $('toastDetail').innerHTML=`正解は <span class="ansname">${escapeHtml(q.answer)}</span> ／ 時間 <b>−5秒</b>（減点なし）`; }
+  $('toastTrivia').innerHTML=`💡 ${escapeHtml(q.answer)}：${escapeHtml(q.note)}`;
+  scrim.classList.add('show');
+}
+$('nextBtn').addEventListener('click',()=>{
+  $('toastScrim').classList.remove('show');
+  state.idx++;
+  if(state.idx>=state.questions.length) endGame(false);
+  else loadQuestion();
+});
+
+/* 終了 */
+function endGame(timedOut){
+  if(state.phase==='ended') return;
+  state.phase='ended';
+  stopTicker(); stopTypewriter(); $('toastScrim').classList.remove('show');
+  const bonus=timedOut?0:Math.floor(state.time);
+  const total=state.score+bonus;
+  state.finalTotal=total;
+  $('resultGenreLabel').textContent=state.genreName+(timedOut?'｜時間切れ':'｜クリア');
+  $('finalScore').textContent=total;
+  $('finalCorrect').textContent=state.correct;
+  $('finalBonus').textContent=bonus;
+  $('hanamaru').classList.toggle('show',total>=HANAMARU_SCORE);
+  buildReview(); saveRank(total); renderRank(total);
+  showScreen('resultScreen');
+}
+
+/* 復習 */
+function buildReview(){
+  const list=$('reviewList'); list.innerHTML='';
+  if(state.wrongs.length===0){
+    const d=document.createElement('div'); d.className='allcorrect';
+    d.textContent='全問正解！ まちがいはありません 🎉'; list.appendChild(d); return;
+  }
+  state.wrongs.forEach(w=>{
+    const item=document.createElement('div'); item.className='rev-item';
+    item.innerHTML=`<div class="rprefs">🥇<b>${escapeHtml(w.prefs[0])}</b> 🥈<b>${escapeHtml(w.prefs[1])}</b> 🥉<b>${escapeHtml(w.prefs[2])}</b></div>
+      <div class="rrow"><span class="right">✅ ${escapeHtml(w.answer)}</span><span class="yourbad">あなたの回答：${escapeHtml(w.chosen)}</span></div>
+      <div class="rnote">💡 ${escapeHtml(w.note)}</div>`;
+    list.appendChild(item);
+  });
+}
+
+/* ランキング */
+function loadRank(){ try{ return JSON.parse(localStorage.getItem(RANK_KEY))||[]; }catch(e){ return []; } }
+function saveRank(total){
+  const list=loadRank();
+  list.push({ score:total, genre:state.genreName, date:new Date().toISOString(), _me:true });
+  list.sort((a,b)=>b.score-a.score);
+  const trimmed=list.slice(0,10);
+  localStorage.setItem(RANK_KEY, JSON.stringify(trimmed.map(({_me,...r})=>r)));
+  state._rankSnapshot=trimmed;
+}
+function renderRank(myTotal){
+  const wrap=$('rankWrap');
+  const list=state._rankSnapshot||loadRank();
+  if(list.length===0){ wrap.innerHTML='<div class="rank-empty">まだ記録がありません</div>'; return; }
+  const medals=['🥇','🥈','🥉']; let marked=false;
+  const rows=list.map((r,i)=>{
+    const me=r._me&&!marked&&r.score===myTotal; if(me)marked=true;
+    const d=new Date(r.date);
+    return `<tr class="${me?'me':''}"><td class="medal">${medals[i]||(i+1)}</td><td>${escapeHtml(r.genre)}</td><td style="color:var(--muted2);font-size:.78rem">${d.getMonth()+1}/${d.getDate()}</td><td class="num">${r.score}</td></tr>`;
+  }).join('');
+  wrap.innerHTML=`<table class="rank"><thead><tr><th class="medal"></th><th>ジャンル</th><th>日付</th><th style="text-align:right">スコア</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* TOPからランキング */
+$('topRankBtn').addEventListener('click',()=>{
+  state=state||{};
+  $('resultGenreLabel').textContent='ランキング';
+  $('finalScore').textContent=(loadRank()[0]?.score)||0;
+  $('finalCorrect').textContent='-'; $('finalBonus').textContent='-';
+  $('hanamaru').classList.remove('show');
+  $('reviewList').innerHTML='<div class="rank-empty">ゲームをプレイすると、まちがえた問題がここに表示されます</div>';
+  state._rankSnapshot=loadRank(); renderRank(-1);
+  showScreen('resultScreen');
+});
+
+/* ナビ */
+$('startBtn').addEventListener('click',startGame);
+$('readyBackBtn').addEventListener('click',()=>showScreen('topScreen'));
+$('retryBtn').addEventListener('click',()=>{ if(pendingGenre) startGame(); else showScreen('topScreen'); });
+$('homeBtn').addEventListener('click',()=>showScreen('topScreen'));
+
+buildGenreCards();
+</script>
+</body>
+</html>
