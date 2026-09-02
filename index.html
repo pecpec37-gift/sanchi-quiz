@@ -185,6 +185,23 @@
   .disclaimer{color:var(--muted2);font-size:.72rem;line-height:1.6;margin-top:18px;text-align:center}
   .footer{margin-top:auto;padding-top:20px;color:var(--muted2);font-size:.72rem;text-align:center}
   @media (max-width:380px){ .title{font-size:1.66rem} .rules{grid-template-columns:1fr} }
+
+  /* ===== 学習メニュー ===== */
+  .study-toggle{display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap}
+  .study-toggle button{flex:1;min-width:96px;padding:11px 8px;border-radius:12px;font-weight:900;font-size:.85rem;border:1.5px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;transition:.14s}
+  .study-toggle button.active{background:rgba(232,180,79,.16);color:var(--gold);border-color:rgba(232,180,79,.6)}
+  .scount{color:var(--muted2);font-size:.78rem;text-align:center;margin-bottom:12px}
+  .study-list{display:flex;flex-direction:column;gap:11px}
+  .tcard{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1.5px solid var(--line);border-left:4px solid var(--gold);border-radius:14px;padding:13px 15px;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+  .tcard .tlabel{font-weight:900;font-size:1.05rem;color:var(--ink);margin-bottom:8px}
+  .tcard .tprefs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+  .tcard .tprefs span{background:rgba(232,180,79,.1);border:1px solid rgba(232,180,79,.28);border-radius:999px;padding:4px 11px;font-size:.85rem;font-weight:800;color:var(--gold-soft)}
+  .tcard .tnote{color:var(--muted);font-size:.8rem;line-height:1.6}
+  /* ===== ヒントボタン ===== */
+  .hint-area{text-align:center;margin-bottom:10px}
+  .hint-btn{display:inline-flex;align-items:center;gap:.4em;padding:11px 20px;border-radius:12px;font-weight:800;font-size:.92rem;border:1.5px solid rgba(232,180,79,.5);background:rgba(232,180,79,.1);color:var(--gold-soft);cursor:pointer;transition:.14s}
+  .hint-btn:hover{background:rgba(232,180,79,.18)}
+  .hint-btn:disabled{opacity:.45;cursor:default}
 </style>
 </head>
 <body>
@@ -203,7 +220,7 @@
     <div class="hintline"><span class="dot"></span>制限30秒・正解で+10点＆+5秒・100点以上で花丸🌸</div>
 
     <div class="genre-grid" id="genreGrid"></div>
-    <div class="toplinks"><button class="btn ghost" id="topRankBtn">🏆 ランキングを見る</button></div>
+    <div class="toplinks"><button class="btn" id="topStudyBtn">📖 学習メニュー</button><button class="btn ghost" id="topRankBtn">🏆 ランキング</button></div>
   </section>
 
   <!-- READY -->
@@ -236,6 +253,7 @@
     <div class="q-eyebrow">この3県が生産量TOP3の産物は？</div>
     <div class="podium" id="podium"></div>
 
+    <div class="hint-area" id="hintArea"><button class="hint-btn" id="hintBtn">💡 ヒントを見る</button></div>
     <div class="qtext" id="qText"></div>
 
     <div class="buzzer-area" id="buzzerArea">
@@ -278,6 +296,21 @@
       <button class="btn ghost" id="homeBtn">ジャンル選択へ</button>
     </div>
     <div class="disclaimer">※ 産地データは農林水産省「作物統計」等の近年の数値をもとにしています。年によって順位が入れ替わる品目もあります。</div>
+  </section>
+
+  <section id="studyScreen" class="screen">
+    <div class="portal-back"><a href="https://pecpec37-gift.github.io/portal/">← ポータルサイトに戻る</a></div>
+    <p class="eyebrow">Study · 学習メニュー</p>
+    <h1 class="title" style="font-size:1.5rem">📖 産地を学ぶ</h1>
+    <p class="lede">産物ごとに、生産量<b>TOP3の都道府県</b>と豆知識を読んで覚えよう。ジャンルを切り替えて一覧できます。</p>
+    <div class="study-toggle">
+      <button data-cat="F" id="studyTabF">🍎 くだもの</button>
+      <button data-cat="V" id="studyTabV">🥬 やさい</button>
+      <button data-cat="O" id="studyTabO">🐄 米・畜産・水産</button>
+    </div>
+    <div class="scount" id="studyCount"></div>
+    <div class="study-list" id="studyList"></div>
+    <div class="toplinks" style="margin-top:16px"><button class="btn ghost" id="studyBackBtn">← トップへ戻る</button></div>
   </section>
 
   <div class="footer">とみやんのゲームランド ／ Japan Production Quiz</div>
@@ -456,7 +489,9 @@ function loadQuestion(){
     `<div class="pcard${i===0?' gold':''}"><div class="medal">${medals[i]}</div><div class="rk">${rk[i]}</div><div class="pref">${escapeHtml(p)}</div></div>`
   ).join('');
 
-  startTypewriter('ヒント：'+q.hint);
+  // ヒントは自動表示せず、ボタンを押したら表示する
+  $('hintArea').style.display='block';
+  $('hintBtn').disabled=false; $('hintBtn').textContent='💡 ヒントを見る';
 }
 
 /* タイプライター */
@@ -476,6 +511,7 @@ $('buzzerBtn').addEventListener('click',()=>{
   if(state.phase!=='reading') return;
   state.phase='answering';
   stopTypewriter();
+  $('hintArea').style.display='none';
   $('buzzerBtn').disabled=true;
   $('qText').classList.add('faded');
   setTimeout(()=>{ $('buzzerArea').style.display='none'; showChoices(); },300);
@@ -601,6 +637,39 @@ $('startBtn').addEventListener('click',startGame);
 $('readyBackBtn').addEventListener('click',()=>showScreen('topScreen'));
 $('retryBtn').addEventListener('click',()=>{ if(pendingGenre) startGame(); else showScreen('topScreen'); });
 $('homeBtn').addEventListener('click',()=>showScreen('topScreen'));
+
+/* ---------- ヒントボタン ---------- */
+$('hintBtn').addEventListener('click',()=>{
+  if(state.phase!=='reading') return;
+  const q=state.questions[state.idx];
+  startTypewriter('ヒント：'+q.hint);
+  $('hintArea').style.display='none';
+});
+
+/* ---------- 学習メニュー ---------- */
+function buildStudy(cat){
+  const list=$('studyList'); list.innerHTML='';
+  const rows=DATA.filter(r=>r[0]===cat);
+  $('studyCount').textContent='全 '+rows.length+' 品目';
+  const medals=['🥇','🥈','🥉'];
+  rows.forEach(r=>{
+    const o=toObj(r);
+    const card=document.createElement('div');
+    card.className='tcard';
+    const prefs=o.prefs.map((p,i)=>'<span>'+medals[i]+escapeHtml(p)+'</span>').join('');
+    card.innerHTML='<div class="tlabel">'+escapeHtml(o.answer)+'</div>'
+      +'<div class="tprefs">'+prefs+'</div>'
+      +(o.note?'<div class="tnote">'+escapeHtml(o.note)+'</div>':'');
+    list.appendChild(card);
+  });
+  document.querySelectorAll('.study-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.cat===cat));
+}
+function openStudy(cat){ buildStudy(cat||'F'); showScreen('studyScreen'); }
+$('topStudyBtn').addEventListener('click',()=>openStudy('F'));
+$('studyTabF').addEventListener('click',()=>buildStudy('F'));
+$('studyTabV').addEventListener('click',()=>buildStudy('V'));
+$('studyTabO').addEventListener('click',()=>buildStudy('O'));
+$('studyBackBtn').addEventListener('click',()=>showScreen('topScreen'));
 
 buildGenreCards();
 </script>
